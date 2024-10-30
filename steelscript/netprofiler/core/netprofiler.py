@@ -56,6 +56,7 @@ class NetProfiler(steelscript.common.service.Service):
             :py:class:`UserAuth<steelscript.common.service.UserAuth>` or
             :py:class:`OAuth<steelscript.common.service.OAuth>`
 
+        : TODO: implement the force_version feature
         :param str force_version: API version to use when communicating.
             if unspecified, this will use the latest version supported by both
             this implementation and the NetProfiler appliance.
