@@ -41,7 +41,8 @@ class NetProfiler(steelscript.common.service.Service):
     NetProfiler appliance.  Primarily this provides an interface to reporting.
     """
 
-    def __init__(self, host, port=None, auth=None):
+    def __init__(self, host, port=None, auth=None,
+                revalidate_cache=True,refresh_cache=False):
         """Establishes a connection to a NetProfiler appliance.
 
         :param str host: name or IP address of the NetProfiler to
@@ -55,6 +56,8 @@ class NetProfiler(steelscript.common.service.Service):
             to use to access the NetProfiler.  It should be an instance of
             :py:class:`UserAuth<steelscript.common.service.UserAuth>` or
             :py:class:`OAuth<steelscript.common.service.OAuth>`
+
+        NetProfiler specific:
 
         :param revalidate_cache: True to revalidate the cache (default).           
             refresh_cache (full refresh) takes precedence over revalidate_cache
@@ -72,7 +75,6 @@ class NetProfiler(steelscript.common.service.Service):
         """
         super(NetProfiler, self).__init__("profiler", host, port,
                                           auth=auth,
-                                          revalidate_cache=True,refresh_cache=False,
                                           versions=[APIVersion("1.0")],
                                           enable_auth_detection = False,
                                           supports_auth_basic=True,
