@@ -102,9 +102,9 @@ class NetProfiler(steelscript.common.service.Service):
         # Initialize cache and optionally revalidate or fully refresh
         self._load_file_caches()
         if refresh_cache:
-            _verify_cache(refetch=True)
+            self._verify_cache(refetch=True)
         elif revalidate_cache:
-            _verify_cache()
+            self._verify_cache()
         self.columns = ColumnContainer(self._unique_columns())
         self.colnames = set(c.key for c in self.columns)
         self.areas = AreaContainer(self._areas_dict.items())
