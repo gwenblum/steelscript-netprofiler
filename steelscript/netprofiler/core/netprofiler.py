@@ -56,6 +56,12 @@ class NetProfiler(steelscript.common.service.Service):
             :py:class:`UserAuth<steelscript.common.service.UserAuth>` or
             :py:class:`OAuth<steelscript.common.service.OAuth>`
 
+        :param revalidate_cache: True to revalidate the cache (default).           
+            refresh_cache (full refresh) takes precedence over revalidate_cache
+            For quick initialization with a minimal cache, set both revalidate_cache and refresh_cache to False.
+
+        :param refresh_cache: True to force a full refresh of the cache. Default: False. 
+
         : TODO: implement the force_version feature
         :param str force_version: API version to use when communicating.
             if unspecified, this will use the latest version supported by both
@@ -66,6 +72,7 @@ class NetProfiler(steelscript.common.service.Service):
         """
         super(NetProfiler, self).__init__("profiler", host, port,
                                           auth=auth,
+                                          revalidate_cache=True,refresh_cache=False,
                                           versions=[APIVersion("1.0")],
                                           enable_auth_detection = False,
                                           supports_auth_basic=True,
@@ -90,11 +97,34 @@ class NetProfiler(steelscript.common.service.Service):
             _key, _value = ('qos', 'qos')
         self.groupbys[_key] = _value
 
+        # Initialize cache and optionally revalidate or fully refresh
         self._load_file_caches()
+        if refresh_cache:
+            _verify_cache(refetch=True)
+        elif revalidate_cache:
+            _verify_cache()
         self.columns = ColumnContainer(self._unique_columns())
         self.colnames = set(c.key for c in self.columns)
-
         self.areas = AreaContainer(self._areas_dict.items())
+
+    def refresh_cache(self):
+        """
+        Refresh the cache (columns)
+        """
+        self._verify_cache(refetch=True)
+        self.columns = ColumnContainer(self._unique_columns())
+        self.colnames = set(c.key for c in self.columns)
+        self.areas = AreaContainer(self._areas_dict.items())        
+
+    def revalidate_cache(self):
+        """
+        Revalidate the local cache (columns)
+        """
+        self._verify_cache(refetch=False)
+        self.columns = ColumnContainer(self._unique_columns())
+        self.colnames = set(c.key for c in self.columns)
+        self.areas = AreaContainer(self._areas_dict.items())                
+
 
     def _load_file_caches(self):
         """Load and unroll locally cached files
@@ -118,7 +148,6 @@ class NetProfiler(steelscript.common.service.Service):
             self._areas_file.data = self.api.report.areas()
             self._areas_file.write()
 
-        self._verify_cache()
         self._areas_dict = dict(self._genareas(self._areas_file.data))
 
     def _verify_cache(self, refetch=False):
@@ -195,16 +224,15 @@ class NetProfiler(steelscript.common.service.Service):
             self._columns_file.version = _constants.CACHE_VERSION
             self._columns_file.write()
         elif have_exception:
-            logger.warning('_verify_cache: Some realm, centricity, '
-                           'and groupby triplets failed.')
+            logger.warning('_verify_cache: Some realm, centricity, and groupby triplets failed.')
 
         if not self._columns_file.data:
-            raise RvbdException("_verify_cache failed to collect both"
-                                "cached and live data. Please check"
-                                "NetProfiler health")
+            raise RvbdException("_verify_cache failed to collect both cached and live data. Please check NetProfiler health")
 
     def _unique_columns(self):
-        """Pull unique columns from _columns_file (a dict of lists). """
+        """
+        Pull unique columns from _columns_file (a dict of lists).
+        """
         def unique(seq):
             seen = set()
             for lst in seq:
