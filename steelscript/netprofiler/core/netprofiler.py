@@ -294,6 +294,8 @@ class NetProfiler(steelscript.common.service.Service):
     def supports_version(self, version):
         if isinstance(version, (str,)):
             version = APIVersion(version)
+        if self.supported_versions is None:
+            return True            
         return version in self.supported_versions
 
     def get_columns(self, columns, groupby=None, strict=True):
